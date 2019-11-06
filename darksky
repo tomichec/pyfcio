@@ -10,6 +10,46 @@ import sys
 import os
 import math
 
+def getTownLocation(town):
+        town = town.replace(" ","%20")
+        url = "https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&extratags=1&q="
+        response = urllib2.urlopen(url + town)
+        locations = json.loads(response.read())
+
+        numLocations = len(locations)
+        if numLocations == 0:
+                print "Location not found, please enter coordinates for " + args.location + " manualy."
+        if numLocations == 1:
+                selection = 0
+        if numLocations > 1:
+                print "Found " + str(numLocations) + " with the name " + args.location + "."
+	        for index,loc in enumerate(locations):
+	                print str(index) + ") " + loc['display_name']
+
+                while True:
+	                try:
+		                selection = int(raw_input('Your choice [-1 to add coordinates manually]: '))
+	                        assert selection < numLocations and selection >= -1, "Selection out of range."
+
+                                if selection >=0:
+			                location = locations[selection]
+				        lat = float(location['lat'])
+				        lon = float(location['lon'])
+
+                                        return lat, lon
+                                else:
+                                        break
+	                except ValueError or AssertionError:
+	                        print "Input has to be an integer in the specified range."
+
+        while True:
+                try:
+		        lat = float(raw_input('Latitude:  '))
+		        lon = float(raw_input('Longitude: '))
+                        return lat, lon
+	        except ValueError:
+	                print "Input has to be a number."
+
 
 def writeConfig(config, conffile):
         '''write the config file into the specified conffile'''
@@ -255,10 +295,11 @@ else:
         except:
                 pass
 
-        print "Please enter geografic coordinates for " + args.location + "."
-        lat = raw_input('Latitude:  ')
-        lon = raw_input('Longitude: ')
 
+
+        lat, lon = getTownLocation(args.location)
+
+        print "Adding the location coordinates for " + args.location + " as latitude " + str(lat) + " longitude", str(lon) + "."
         config.set(args.location, 'lat', lat)
         config.set(args.location, 'lon', lon)
 
